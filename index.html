@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- PWA / iOS Standalone Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="San Valentín">
+    <meta name="theme-color" content="#ffc3a0">
+    
+    <!-- Placeholder for Icon -->
+    <link rel="icon" type="image/png" href="./favicon.png">
+    <link rel="shortcut icon" href="./favicon.png">
+
+    <link rel="apple-touch-icon" href="./favicon.png">
+    
+    <link rel="icon" sizes="192x192" href="./favicon.png">
+
+    <title>Mi San Valentín</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Sunset Gradient Variables (Golden Hour) */
+            --bg-top: #ffc3a0; /* (Un tono durazno/naranja suave, como el sol cayendo). */
+            --bg-bottom: #ffafbd; /* (Un rosa romántico que se mezcla con el cielo). */
+            
+            --envelope-color: #e6cbb1; /* Kraft */
+            --envelope-dark: #ccb096; /* Darker Kraft */
+            --envelope-shadow: rgba(0,0,0,0.15);
+            --heart-color: #e57373;
+            --text-color: #5d4037;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: linear-gradient(to bottom, var(--bg-top), var(--bg-bottom));
+            font-family: 'Lato', sans-serif;
+            color: var(--text-color);
+            transition: background 2s ease; /* Smooth transition */
+        }
+
+        /* --- NIGHT MODE --- */
+        body.night-mode {
+            --bg-top: #0f2027;   /* Deep Midnight Blue */
+            --bg-bottom: #2c5364; /* Dark Blue Grey */
+        }
+
+        /* Ambient Grain/Texture overlay */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        #app {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1500px;
+        }
+
+        /* --- ENVELOPE CONTAINER --- */
+        .envelope-wrapper {
+            position: relative;
+            width: 300px; /* Standard Width */
+            height: 200px; /* Standard Height */
+            cursor: pointer;
+            transition: transform 0.6s ease;
+            transform-style: preserve-3d;
+            z-index: 10;
+        }
+
+        .envelope {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+
+        /* --- STRICT Z-INDEX LAYERING --- */
+
+        /* LAYER 1: BACK (Base) */
+        .envelope-back {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--envelope-dark);
+            border-radius: 0 0 5px 5px;
+            z-index: 1; /* Lowest layer */
+            box-shadow: 0 10px 20px var(--envelope-shadow);
+        }
+
+        /* LAYER 2: LETTER (Content) */
+        .letter {
+            position: absolute;
+            bottom: 0; /* Start at bottom of envelope */
+            left: 5%;
+            width: 90%;
+            height: 180px;
+            background-color: #fff9f0;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.05); 
+            z-index: 2; /* Sandwiched between Back and Pocket */
+            transition: transform 0.8s 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 4px;
+        }
+        
+        .letter h1 {
+            font-family: 'Great Vibes', cursive;
+            font-size: 1.8rem;
+            margin: 0 0 15px 0;
+            color: #d32f2f;
+            line-height: 1.1;
+        }
+
+        /* LAYER 3: POCKET (Front Visual) */
+        .envelope-pocket {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--envelope-color);
+            background-image: url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 3h1v1H1V3zm2-2h1v1H3V1z' fill='%23dcb898' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E");
+            clip-path: polygon(0 0, 50% 50%, 100% 0, 100% 100%, 0 100%);
+            z-index: 3; /* COVERS the letter */
+            border-radius: 0 0 5px 5px;
+            pointer-events: none;
+        }
+
+        /* LAYER 4: FLAP (Top Lid) */
+        .envelope-flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100px; /* Half height */
+            background-color: #dcb898; 
+            background-image: inherit;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+            transform-origin: top;
+            transition: transform 0.6s ease-in-out;
+            z-index: 4; /* Highest layer initially */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 15px;
+        }
+
+        /* Inner lining of flap (visible when rotated) */
+        .envelope-flap::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #f7e7ce;
+            z-index: -1;
+            backface-visibility: visible;
+        }
+
+        /* Sticker */
+        .sticker-heart {
+            width: 40px;
+            height: 40px;
+            background-color: #d32f2f;
+            transform: rotate(45deg);
+            position: absolute;
+            top: 45px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            cursor: pointer;
+            animation: heartbeat 1.5s infinite;
+            z-index: 5;
+        }
+        
+        .sticker-heart::before, .sticker-heart::after {
+            content: "";
+            width: 40px;
+            height: 40px;
+            background-color: #d32f2f;
+            border-radius: 50%;
+            position: absolute;
+        }
+        .sticker-heart::before { top: -20px; left: 0; }
+        .sticker-heart::after { top: 0; left: -20px; }
+
+        @keyframes heartbeat {
+            0% { transform: rotate(45deg) scale(1); }
+            50% { transform: rotate(45deg) scale(1.1); }
+            100% { transform: rotate(45deg) scale(1); }
+        }
+
+        /* Hint Text */
+        .click-hint {
+            position: absolute;
+            bottom: -50px;
+            width: 100%;
+            text-align: center;
+            font-family: 'Great Vibes', cursive;
+            font-size: 1.4rem;
+            color: var(--text-color);
+            transition: opacity 0.5s;
+        }
+
+        /* --- OPEN ANIMATIONS --- */
+        .envelope-wrapper.open .envelope-flap {
+            transform: rotateX(180deg);
+            z-index: 0; 
+        }
+
+        .envelope-wrapper.open .letter {
+            transform: translateY(-120px);
+        }
+
+        .envelope-wrapper.open {
+            transform: translateY(80px);
+        }
+
+        .envelope-wrapper.open .sticker-heart,
+        .envelope-wrapper.open .click-hint {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* --- BUTTONS --- */
+        .buttons-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            opacity: 0; 
+            pointer-events: none;
+            transition: opacity 0.5s 1.2s;
+        }
+
+        .envelope-wrapper.open .buttons-container {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .buttons-container.hidden {
+            display: none !important;
+        }
+
+        .btn {
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
+        }
+
+        .btn:active { transform: scale(0.95); }
+
+        .btn-yes {
+            background-color: #d32f2f;
+            color: white;
+            font-weight: 700;
+            padding: 10px 25px;
+            font-size: 1.1rem;
+        }
+
+        .btn-no {
+            background-color: #f0f0f0;
+            color: #777;
+            position: relative; 
+            z-index: 100;
+        }
+
+        /* --- OVERLAYS --- */
+        .overlay-state {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: transparent; /* Show Golden Hour Gradient */
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s;
+        }
+
+        /* Night Mode Overlay override: Transparent/Subtle to show dark background */
+        body.night-mode .overlay-state#sadState {
+            background: rgba(0,0,0,0.1); /* CLEAN UI FIX */
+        }
+
+        .overlay-state.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .overlay-content {
+            z-index: 202;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .overlay-content img {
+            max-width: 85%;
+            max-height: 30vh; /* SCALING FIX: 45vh -> 30vh */
+            border-radius: 12px;
+            /* CLEAN UI FIX: Removed border/box-shadow */
+            margin-bottom: 20px;
+        }
+
+        .overlay-content h2 {
+            font-family: 'Great Vibes', cursive;
+            font-size: 3.5rem;
+            color: #d32f2f;
+            margin: 0;
+        }
+        
+        /* NIGHT MODE CONTRAST FIX */
+        body.night-mode .overlay-content h2 {
+            color: #ffebee; 
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        .overlay-content p {
+            font-size: 1.2rem;
+            margin-top: 10px;
+            color: #5d4037;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 201;
+            pointer-events: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <!-- Envelope Structure (Strict Layers) -->
+        <div class="envelope-wrapper" id="envelope">
+            
+            <div class="envelope">
+                <!-- LAYER 1: BACK -->
+                <div class="envelope-back"></div>
+
+                <!-- LAYER 2: LETTER -->
+                <div class="letter">
+                    <h1>¿Quieres ser<br>mi San Valentín?</h1>
+                    
+                    <div class="buttons-container" id="buttonsContainer">
+                        <button class="btn btn-yes" id="btnYes">¡SÍ!</button>
+                        <button class="btn btn-no" id="btnNo">No</button>
+                    </div>
+                </div>
+
+                <!-- LAYER 3: POCKET (Triangle covers bottom of letter) -->
+                <div class="envelope-pocket"></div>
+
+                <!-- LAYER 4: FLAP (Rotates) -->
+                <div class="envelope-flap" id="flap">
+                    <div class="sticker-heart"></div>
+                </div>
+            </div>
+            
+            <div class="click-hint">Toca el corazón</div>
+        </div>
+    </div>
+
+    <!-- Sad Overlay -->
+    <div class="overlay-state" id="sadState">
+        <canvas id="canvasRain"></canvas>
+        <div class="overlay-content">
+            <img src="./monitoTriste.png" alt="Sad Bear">
+            <h2>Grosera :(</h2>
+        </div>
+    </div>
+
+    <!-- Happy Overlay -->
+    <div class="overlay-state" id="happyState">
+        <canvas id="canvasHearts"></canvas>
+        <div class="overlay-content">
+            <img src="./monitoEnamorado.png" alt="Happy Love">
+            <h2>¡Lo sabía!</h2>
+            <p>¡Te amo preciosa!</p>
+        </div>
+    </div>
+
+    <script>
+        // --- ELEMENTS ---
+        const envelope = document.getElementById('envelope');
+        const flap = document.getElementById('flap');
+        const btnYes = document.getElementById('btnYes');
+        const btnNo = document.getElementById('btnNo');
+        const buttonsContainer = document.getElementById('buttonsContainer');
+        const sadState = document.getElementById('sadState');
+        const happyState = document.getElementById('happyState');
+
+        // --- GAME STATE ---
+        let isOpen = false;
+        let noCount = 0;
+        const maxNo = 3; // Strict limit: 3rd click = Sad Mode
+
+        // --- OPEN LOGIC ---
+        function openEnvelope() {
+            if(isOpen) return;
+            isOpen = true;
+            envelope.classList.add('open');
+        }
+        flap.addEventListener('click', openEnvelope);
+
+        // --- BUTTON LOGIC ---
+        
+        // "YES" Action
+        btnYes.addEventListener('click', () => {
+            triggerHappyMode();
+        });
+
+        // "NO" Action
+        function moveButton() {
+            noCount++; 
+
+            // IMMEDIATE CHECK: If this is the 3rd attempt, fail immediately.
+            if (noCount >= maxNo) {
+                triggerSadMode();
+                return;
+            }
+
+            // Move to body to escape transform context (Viewport-relative positioning)
+            if (btnNo.parentNode !== document.body) {
+                document.body.appendChild(btnNo);
+            }
+
+            // Math: Viewport Size - Button Size - Padding
+            const pad = 20;
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const btnW = btnNo.offsetWidth;
+            const btnH = btnNo.offsetHeight;
+
+            const maxX = w - btnW - pad;
+            const maxY = h - btnH - pad;
+
+            // Safe Random Position
+            const newX = Math.max(pad, Math.random() * maxX);
+            const newY = Math.max(pad, Math.random() * maxY);
+
+            btnNo.style.position = 'fixed';
+            btnNo.style.left = `${newX}px`;
+            btnNo.style.top = `${newY}px`;
+            btnNo.style.zIndex = '1000';
+            btnNo.style.transition = 'all 0.3s ease-out';
+        }
+
+        // Add Listeners
+        btnNo.addEventListener('touchstart', (e) => { e.preventDefault(); moveButton(); });
+        btnNo.addEventListener('mouseover', moveButton);
+        btnNo.addEventListener('click', (e) => { e.preventDefault(); moveButton(); });
+
+
+        // --- END STATES ---
+
+        function triggerSadMode() {
+            hideButtons();
+            
+            // CLEANUP FIX: Hide the Envelope Container
+            document.getElementById('app').style.display = 'none';
+            
+            // NIGHT MODE ACTIVATION
+            document.body.classList.add('night-mode');
+            
+            sadState.classList.add('active');
+            startRain();
+            notifyDiscord('NO');
+        }
+
+        function triggerHappyMode() {
+            hideButtons();
+            
+            // CLEANUP FIX: Hide the Envelope Container
+            document.getElementById('app').style.display = 'none';
+            
+            happyState.classList.add('active');
+            startHearts();
+            notifyDiscord('YES');
+        }
+
+        function hideButtons() {
+            // Remove buttons from view so they don't interfere
+            buttonsContainer.classList.add('hidden');
+            if(btnNo.parentNode === document.body) {
+                btnNo.style.display = 'none';
+            }
+        }
+
+
+        // --- CANVAS ANIMATIONS ---
+
+        // Rain
+        function startRain() {
+            const canvas = document.getElementById('canvasRain');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const drops = Array.from({length: 100}, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                len: Math.random() * 20 + 10,
+                speed: Math.random() * 10 + 5
+            }));
+
+            function draw() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                
+                // CONTRAST FIX: White/Light Rain
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                
+                ctx.lineWidth = 1;
+                ctx.globalAlpha = 0.6;
+                drops.forEach(d => {
+                    ctx.beginPath();
+                    ctx.moveTo(d.x, d.y);
+                    ctx.lineTo(d.x, d.y + d.len);
+                    ctx.stroke();
+                    d.y += d.speed;
+                    if(d.y > canvas.height) { d.y = -d.len; d.x = Math.random() * canvas.width; }
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        // Hearts
+        function startHearts() {
+            const canvas = document.getElementById('canvasHearts');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const hearts = Array.from({length: 60}, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * -canvas.height, 
+                size: Math.random() * 0.6 + 0.3,
+                speed: Math.random() * 4 + 2,
+                color: `hsla(${340 + Math.random() * 30}, 90%, 70%, 0.8)`
+            }));
+
+            function draw() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                hearts.forEach(h => {
+                    ctx.save();
+                    ctx.translate(h.x, h.y);
+                    ctx.scale(h.size, h.size);
+                    ctx.fillStyle = h.color;
+                    ctx.beginPath();
+                    ctx.moveTo(0,0);
+                    ctx.bezierCurveTo(-5,-5,-10,0,-10,5);
+                    ctx.bezierCurveTo(-10,12,0,18,0,22);
+                    ctx.bezierCurveTo(0,18,10,12,10,5);
+                    ctx.bezierCurveTo(10,0,5,-5,0,0);
+                    ctx.fill();
+                    ctx.restore();
+                    h.y += h.speed;
+                    if(h.y > canvas.height + 20) { h.y = -20; h.x = Math.random() * canvas.width; }
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+        
+        window.addEventListener('resize', () => {
+             // Basic resize handler
+             const cR = document.getElementById('canvasRain');
+             const cH = document.getElementById('canvasHearts');
+             if(cR) { cR.width = window.innerWidth; cR.height = window.innerHeight; }
+             if(cH) { cH.width = window.innerWidth; cH.height = window.innerHeight; }
+        });
+
+        // --- DISCORD WEBHOOK INTEGRATION ---
+
+        
+
+        const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1469412769135853811/JfnewCPBrdbhOcpHBg_608dhcwE9DOArWn4zZBkrRR1P-zUU-Ena0ExBQfzEAQwNmFci';
+
+
+
+        function notifyDiscord(status) {
+
+            // Evitar enviar si no hay URL configurada (para pruebas locales)
+
+            if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes('TU_URL')) return;
+
+
+
+            let contentMessage = "";
+
+            
+
+            if (status === 'YES') {
+
+                contentMessage = "🚨 **¡ATENCIÓN DEV!** 🚨\n\n💘 **¡ELLA DIJO QUE SÍ!** 💘\n\nPrepara la cena, compra las flores y haz el deploy al corazón. ¡Misión cumplida! 🚀";
+
+            } else {
+
+                contentMessage = "⚠️ **ALERTA DE SISTEMA** ⚠️\n\n🌧️ Activó el **Modo Triste** (3 intentos de No).\n\nProceder con plan de contingencia: Abrazos y chocolate de emergencia. 🍫";
+
+            }
+
+
+
+            const payload = {
+
+                content: contentMessage,
+
+                username: "Cupido FullStack",
+
+                avatar_url: "https://cdn-icons-png.flaticon.com/512/2530/2530867.png" // Icono de corazón opcional
+
+            };
+
+
+
+            fetch(DISCORD_WEBHOOK_URL, {
+
+                method: 'POST',
+
+                headers: {
+
+                    'Content-Type': 'application/json'
+
+                },
+
+                body: JSON.stringify(payload)
+
+            })
+
+            .then(response => console.log('Notificación enviada a Discord:', response.status))
+
+            .catch(error => console.error('Error enviando a Discord:', error));
+
+        }
+    </script>
+</body>
+</html>
